@@ -320,9 +320,14 @@ def parse_args():
         help="Print DEBUG messages",
         action="store_const", dest="loglevel", const=logging.DEBUG,
     )
+    parser.add_argument(
+        '-l', '--no-global-broadcast',
+        help="Use local net broadcast addr to send packets instead of '255.255.255.255'",
+        action="store_true", dest="local_broadcast",
+    )
     return parser.parse_args()
 
-def main():
+def main(local_broadcast:bool):
     logging.debug('Program Start')
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -358,8 +363,9 @@ def main():
         elif pkt:
             try:
                 net = ipaddress.IPv4Network(get_ip_address(NET_IFACE) + '/' + get_netmask(NET_IFACE), False)
-                logging.debug(f'DEVice NET: {net}, DESTination ADDRess: {net.broadcast_address}')
-                sock.sendto(pkt, (str(net.broadcast_address), 50001))
+                dst_addr = str(net.broadcast_address) if local_broadcast else '255.255.255.255'
+                logging.debug(f'DEVice NET: {net}, DESTination ADDRess: {dst_addr}')
+                sock.sendto(pkt, (dst_addr, 50001))
             except Exception:
                 continue
             except:
@@ -369,6 +375,6 @@ if __name__ == '__main__':
     try:
         args = parse_args()
         logging.basicConfig(level=args.loglevel, format='%(levelname)s:%(message)s')
-        main()
+        main(args.local_broadcast)
     except:
         sys.exit(1)
