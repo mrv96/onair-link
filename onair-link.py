@@ -322,7 +322,7 @@ def parse_args():
     )
     parser.add_argument(
         '-l', '--no-global-broadcast',
-        help="Use local net broadcast addr to send packets instead of '255.255.255.255'",
+        help="Use local net broadcast addr to send packets instead of '255.255.255.255' (option always enabled if link-local IP)",
         action="store_true", dest="local_broadcast",
     )
     return parser.parse_args()
@@ -363,7 +363,7 @@ def main(local_broadcast:bool):
         elif pkt:
             try:
                 net = ipaddress.IPv4Network(get_ip_address(NET_IFACE) + '/' + get_netmask(NET_IFACE), False)
-                dst_addr = str(net.broadcast_address) if local_broadcast else '255.255.255.255'
+                dst_addr = str(net.broadcast_address) if local_broadcast or net.is_link_local else '255.255.255.255'
                 logging.debug(f'DEVice NET: {net}, DESTination ADDRess: {dst_addr}')
                 sock.sendto(pkt, (dst_addr, 50001))
             except Exception:
